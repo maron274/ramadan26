@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการข้อมูลผู้รับประโยชน์ - โครงการรอมาฎอน 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans Thai', sans-serif; background-color: #f1f5f9; }
+        .gradient-header { background: linear-gradient(to right, #1e293b, #334155); }
+        .card-shadow { box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1); }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: bold; }
+        .input-style { width: 100%; padding: 0.6rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; outline: none; transition: 0.2s; }
+        .input-style:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+        .hidden { display: none; }
+        .section-box { background-color: #f8fafc; border-radius: 1rem; padding: 1.5rem; border: 1px solid #f1f5f9; }
+    </style>
+</head>
+<body class="h-full">
+
+    <div id="toast-container" class="fixed top-4 right-4 z-50"></div>
+
+    <header class="bg-[#1e293b] text-white py-5 px-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-white rounded-full p-1 flex items-center justify-center overflow-hidden shadow-inner">
+                    <img src="logo.png" alt="Logo" class="max-w-full max-h-full object-contain" onerror="this.src='https://via.placeholder.com/60?text=Logo'">
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">ระบบจัดการข้อมูลผู้รับประโยชน์</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">โครงการรอมาฎอน 2026 | ดำเนินการโดย มูลนิธิเอคิฎมัต</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-400">โหมด:</span>
+                <span class="bg-slate-700 text-white text-[10px] px-3 py-1 rounded-md border border-slate-600">ทีมงาน</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bg-white border-b sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 flex gap-10">
+            <button onclick="navigate('dashboard')" id="btn-dashboard" class="py-4 text-sm flex items-center gap-2 tab-active transition-all">📊 แดชบอร์ด</button> 
+            <button onclick="navigate('form')" id="btn-form" class="py-4 text-sm text-gray-500 hover:text-blue-600 transition-all flex items-center gap-2 font-medium">➕ เพิ่มข้อมูล</button> 
+            <button onclick="navigate('list')" id="btn-list" class="py-4 text-sm text-gray-500 hover:text-blue-600 transition-all flex items-center gap-2 font-medium">📋 รายการข้อมูล</button>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        
+        <section id="section-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm flex justify-between items-center border border-gray-100">
+                    <div><p class="text-gray-400 text-xs font-medium">ผู้รับประโยชน์ทั้งหมด</p><p id="stat-total" class="text-3xl font-bold text-slate-800 mt-1">0</p></div>
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 text-xl">👥</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm flex justify-between items-center border border-gray-100">
+                    <div><p class="text-gray-400 text-xs font-medium">ถุงยังชีพ</p><p id="stat-relief" class="text-3xl font-bold text-emerald-600 mt-1">0</p></div>
+                    <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-xl">🎁</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm flex justify-between items-center border border-gray-100">
+                    <div><p class="text-gray-400 text-xs font-medium">อิฟฏอร</p><p id="stat-iftar" class="text-3xl font-bold text-orange-500 mt-1">0</p></div>
+                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-xl">🍽️</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm flex justify-between items-center border border-gray-100">
+                    <div><p class="text-gray-400 text-xs font-medium">เสื้อเด็กกำพร้า</p><p id="stat-orphan" class="text-3xl font-bold text-purple-600 mt-1">0</p></div>
+                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-xl">👕</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">📈 สถานะทางเศรษฐกิจ</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between text-sm mb-2"><span class="text-slate-500">ยากจน</span><span id="percent-poor" class="font-bold text-red-500">0%</span></div>
+                            <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div id="bar-poor" class="h-full bg-red-400 transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2"><span class="text-slate-500">ปานกลาง</span><span id="percent-medium" class="font-bold text-yellow-500">0%</span></div>
+                            <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div id="bar-medium" class="h-full bg-yellow-400 transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2"><span class="text-slate-500">ดี</span><span id="percent-good" class="font-bold text-emerald-500">0%</span></div>
+                            <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div id="bar-good" class="h-full bg-emerald-400 transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">🏠 สรุปข้อมูลครัวเรือน</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-6 rounded-2xl text-center">
+                            <p class="text-slate-500 text-sm">สมาชิกทั้งหมด</p>
+                            <p id="summary-members" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                            <p class="text-xs text-slate-400 mt-1">คน</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-2xl text-center">
+                            <p class="text-slate-500 text-sm">รายได้เฉลี่ย</p>
+                            <p id="summary-income" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                            <p class="text-xs text-slate-400 mt-1">บาท/เดือน</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-2xl text-center">
+                            <p class="text-slate-500 text-sm">จำนวนจังหวัด</p>
+                            <p id="summary-provinces" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                            <p class="text-xs text-slate-400 mt-1">จังหวัด</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-2xl text-center">
+                            <p class="text-slate-500 text-sm">เพิ่มล่าสุด</p>
+                            <p id="summary-latest" class="text-xl font-bold text-slate-800 mt-3">-</p>
+                            <p class="text-xs text-slate-400 mt-1">วันที่</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-form" class="hidden">
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden max-w-5xl mx-auto border border-blue-100">
+                <div class="bg-blue-600 px-6 py-4 text-white font-bold flex items-center gap-2"><span>📝</span> เพิ่มข้อมูลผู้รับประโยชน์</div>
+                <form id="beneficiary-form" class="p-8 space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">ศปง <span class="text-red-500">*</span></label>
+                            <select id="organization_region" required class="input-style bg-white">
+                                <option value="">-- เลือก ศปง --</option>
+                                <option>ภูเก็ต</option><option>สตูล</option><option>พัทลุง</option><option>สงขลา</option><option>ปัตตานี</option><option>ยะลา</option><option>นราธิวาส</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">โครงการ <span class="text-red-500">*</span></label>
+                            <select id="project_type" required class="input-style bg-white">
+                                <option value="">-- เลือกโครงการ --</option>
+                                <option>ถุงยังชีพ</option><option>อิฟฏอร</option><option>เสื้อเด็กกำพร้า</option>
+                            </select>
+                        </div>
+                        <div><label class="block text-sm font-bold text-gray-700 mb-2">ชื่อ *</label><input type="text" id="first_name" required class="input-style" placeholder="กรอกชื่อ"></div>
+                        <div><label class="block text-sm font-bold text-gray-700 mb-2">นามสกุล *</label><input type="text" id="last_name" required class="input-style" placeholder="กรอกนามสกุล"></div>
+                    </div>
+
+                    <div class="section-box space-y-4">
+                        <h3 class="text-sm font-bold text-gray-600 flex items-center gap-2">🏠 ที่อยู่</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <input type="text" id="house_no" class="input-style bg-white" placeholder="บ้านเลขที่">
+                            <input type="text" id="moo" class="input-style bg-white" placeholder="หมู่">
+                            <input type="text" id="tambon" class="input-style bg-white" placeholder="ตำบล">
+                            <input type="text" id="amphoe" class="input-style bg-white" placeholder="อำเภอ">
+                        </div>
+                        <select id="province" required class="input-style bg-white">
+                            <option value="">-- เลือกจังหวัด --</option>
+                            <option>ภูเก็ต</option><option>สตูล</option><option>พัทลุง</option><option>สงขลา</option><option>ปัตตานี</option><option>ยะลา</option><option>นราธิวาส</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-blue-50/50 rounded-2xl p-6 space-y-6 border border-blue-100">
+                        <h3 class="text-sm font-bold text-gray-600 flex items-center gap-2">🔢 ข้อมูลครัวเรือน</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div><label class="text-xs text-gray-500">จำนวนสมาชิก</label><input type="number" id="members" value="1" class="input-style bg-white"></div>
+                            <div><label class="text-xs text-gray-500">รายได้ (บาท)</label><input type="number" id="income" value="0" class="input-style bg-white"></div>
+                            <div><label class="text-xs text-gray-500">อาชีพ</label><input type="text" id="job" class="input-style bg-white" placeholder="อาชีพ"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-3">สถานะเศรษฐกิจ *</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 bg-white px-5 py-2 border rounded-xl cursor-pointer hover:bg-red-50 transition-all">
+                                    <input type="radio" name="econ_status" value="ยากจน" required> 😢 ยากจน
+                                </label>
+                                <label class="flex items-center gap-2 bg-white px-5 py-2 border rounded-xl cursor-pointer hover:bg-yellow-50 transition-all">
+                                    <input type="radio" name="econ_status" value="ปานกลาง"> 😐 ปานกลาง
+                                </label>
+                                <label class="flex items-center gap-2 bg-white px-5 py-2 border rounded-xl cursor-pointer hover:bg-green-50 transition-all">
+                                    <input type="radio" name="econ_status" value="ดี"> 😊 ดี
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95">💾 บันทึกข้อมูล</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="section-list" class="hidden">
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-blue-100">
+                <div class="bg-blue-600 px-6 py-5 text-white font-bold flex items-center gap-2"><span class="text-xl">📋</span> รายการข้อมูลผู้รับประโยชน์</div>
+                <div class="p-6 bg-slate-50 border-b flex flex-col md:flex-row gap-4 items-center">
+                    <div class="relative flex-1 w-full">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">🔍</span>
+                        <input type="text" id="search-input" oninput="applyFilters()" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500 bg-white" placeholder="ค้นหาชื่อ, นามสกุล, จังหวัด...">
+                    </div>
+                    <select id="filter-region" onchange="applyFilters()" class="w-full md:w-40 px-4 py-3 border border-gray-300 rounded-xl outline-none bg-white text-sm">
+                        <option value="">ทุก ศปง.</option>
+                        <option>ปัตตานี</option><option>ยะลา</option><option>นราธิวาส</option><option>พัทลุง</option>
+                    </select>
+                    <select id="filter-project" onchange="applyFilters()" class="w-full md:w-40 px-4 py-3 border border-gray-300 rounded-xl outline-none bg-white text-sm">
+                        <option value="">ทุกโครงการ</option>
+                        <option>ถุงยังชีพ</option><option>อิฟฏอร</option><option>เสื้อเด็กกำพร้า</option>
+                    </select>
+                    <select id="filter-status" onchange="applyFilters()" class="w-full md:w-40 px-4 py-3 border border-gray-300 rounded-xl outline-none bg-white text-sm">
+                        <option value="">ทุกสถานะ</option>
+                        <option>ยากจน</option><option>ปานกลาง</option><option>ดี</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            <tr><th class="px-6 py-4">ลำดับ</th><th class="px-6 py-4">ชื่อ-สกุล</th><th class="px-6 py-4">ศปง.</th><th class="px-6 py-4">โครงการ</th><th class="px-6 py-4">จังหวัด</th><th class="px-6 py-4">สถานะ</th></tr>
+                        </thead>
+                        <tbody id="data-table" class="divide-y divide-gray-100 text-sm"></tbody>
+                    </table>
+                </div>
+                <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2 transition-all active:scale-95">
+                    📥 ส่งออกข้อมูล Excel (CSV)
+                </button>
+                <div id="empty-state" class="py-24 text-center">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">📬</div>
+                    <h3 class="text-lg font-bold text-slate-800">ยังไม่มีข้อมูล</h3>
+                    <p class="text-slate-500 text-sm mt-1">เริ่มเพิ่มข้อมูลผู้รับประโยชน์คนแรก</p>
+                </div>
+                <div class="px-6 py-4 bg-slate-50 border-t text-xs text-slate-400">แสดง <span id="badge-count" class="font-bold text-slate-600">0</span> รายการ</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let beneficiaries = [];
+
+        function navigate(tab) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById(`section-${tab}`).classList.remove('hidden');
+            document.getElementById(`btn-${tab}`).classList.add('tab-active');
+            if (tab === 'dashboard') updateDashboard();
+            if (tab === 'list') applyFilters();
+        }
+
+        function updateDashboard() {
+            const total = beneficiaries.length;
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-relief').innerText = beneficiaries.filter(b => b.project === 'ถุงยังชีพ').length;
+            document.getElementById('stat-iftar').innerText = beneficiaries.filter(b => b.project === 'อิฟฏอร').length;
+            document.getElementById('stat-orphan').innerText = beneficiaries.filter(b => b.project === 'เสื้อเด็กกำพร้า').length;
+
+            const statuses = {'ยากจน': 'poor', 'ปานกลาง': 'medium', 'ดี': 'good'};
+            Object.keys(statuses).forEach(key => {
+                const count = beneficiaries.filter(b => b.status === key).length;
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+                document.getElementById(`percent-${statuses[key]}`).innerText = percent + '%';
+                document.getElementById(`bar-${statuses[key]}`).style.width = percent + '%';
+            });
+
+            document.getElementById('summary-members').innerText = beneficiaries.reduce((s, b) => s + parseInt(b.members || 0), 0).toLocaleString();
+            document.getElementById('summary-income').innerText = (total > 0 ? Math.round(beneficiaries.reduce((s, b) => s + parseInt(b.income || 0), 0) / total) : 0).toLocaleString();
+            document.getElementById('summary-provinces').innerText = [...new Set(beneficiaries.map(b => b.province))].filter(p => p !== "").length;
+            if (total > 0) document.getElementById('summary-latest').innerText = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const region = document.getElementById('filter-region').value;
+            const project = document.getElementById('filter-project').value;
+            const status = document.getElementById('filter-status').value;
+            const filtered = beneficiaries.filter(b => {
+                return (b.name.toLowerCase().includes(search) || b.surname.toLowerCase().includes(search) || b.province.toLowerCase().includes(search)) &&
+                       (region === "" || b.region === region) && (project === "" || b.project === project) && (status === "" || b.status === status);
+            });
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('data-table');
+            const empty = document.getElementById('empty-state');
+            document.getElementById('badge-count').innerText = data.length;
+            if (data.length === 0) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+            empty.classList.add('hidden');
+            tbody.innerHTML = data.map((b, i) => `
+                <tr class="hover:bg-blue-50/30 transition-all border-b border-gray-50">
+                    <td class="px-6 py-4 text-gray-400 font-medium">${i + 1}</td>
+                    <td class="px-6 py-4 font-bold text-slate-800">${b.name} ${b.surname}</td>
+                    <td class="px-6 py-4 text-slate-600">${b.region}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold">${b.project}</span></td>
+                    <td class="px-6 py-4 text-slate-600">${b.province}</td>
+                    <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold ${b.status === 'ยากจน' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">${b.status}</span></td>
+                </tr>`).join('');
+        }
+
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzY1cbIPsd9VRFsmP5o_Ycs0iA1N4ctZW-3plZmTPKne3TCXht2DMwQZCH7myzlKAj8xw/exec"; //
+
+            // --- 2. แก้ไขฟังก์ชันการ Submit ฟอร์มให้เป็นแบบนี้ ---
+            document.getElementById('beneficiary-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+           // แสดงสถานะการโหลดบนปุ่ม
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "⏳ กำลังบันทึกข้อมูล...";
+
+    // ดึงค่าสถานะเศรษฐกิจที่เลือก
+    const status = document.querySelector('input[name="econ_status"]:checked').value;
+    
+    // เตรียมข้อมูลส่งไป Google Sheets ให้ตรงกับหัวข้อคอลัมน์
+    const formData = {
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        organization_region: document.getElementById('organization_region').value,
+        project_type: document.getElementById('project_type').value,
+        house_no: document.getElementById('house_no').value,
+        moo: document.getElementById('moo').value,
+        tambon: document.getElementById('tambon').value,
+        amphoe: document.getElementById('amphoe').value,
+        province: document.getElementById('province').value,
+        members: document.getElementById('members').value,
+        income: document.getElementById('income').value,
+        job: document.getElementById('job').value,
+        status: status,
+        note: document.getElementById('note').value
+    };
+
+    try {
+        // ส่งข้อมูลไปยัง Google Apps Script
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (result.result === "success") {
+            // บันทึกสำเร็จ: เพิ่มเข้าตัวแปรในหน้าเว็บเพื่อแสดงผลทันที
+            beneficiaries.push(formData);
+            this.reset();
+            showToast("✅ บันทึกข้อมูลลง Google Sheets สำเร็จ!");
+            
+            // อัปเดต UI และย้ายไปหน้ารายการ
+            updateDashboard();
+            setTimeout(() => navigate('list'), 1000);
+        }
+    } catch (error) {
+        showToast("❌ เกิดข้อผิดพลาดในการเชื่อมต่อ", "error");
+        console.error(error);
+    } finally {
+        // คืนค่าปุ่มกลับมา
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
+});
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = "bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg mb-2 animate-bounce flex items-center gap-2";
+            toast.innerHTML = `<span>✓</span> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function exportToCSV() {
+    if (beneficiaries.length === 0) {
+        showToast("ไม่มีข้อมูลสำหรับส่งออก", "error");
+        return;
+    }
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+    csvContent += "ลำดับ,ชื่อ,นามสกุล,ศปง,โครงการ,จังหวัด,สถานะ,สมาชิก,รายได้\n";
+    beneficiaries.forEach((b, index) => {
+        let row = [index + 1, b.name, b.surname, b.region, b.project, b.province, b.status, b.members, b.income].join(",");
+        csvContent += row + "\n";
+    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "ข้อมูลผู้รับประโยชน์_รอมาฎอน_2026.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+        navigate('dashboard');
+    </script>
+</body>
+</html>
