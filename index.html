@@ -190,6 +190,7 @@
                         <tbody id="data-table" class="divide-y divide-gray-100 text-sm"></tbody>
                     </table>
                 </div>
+                
             </div>
         </section>
     </main>
@@ -264,6 +265,46 @@
                 submitBtn.innerHTML = "💾 บันทึกข้อมูล";
             });
         });
+
+        // เพิ่มฟังก์ชันนี้ไว้ใน <script>
+async function loadDataFromSheet() {
+    const tableBody = document.getElementById('data-table');
+    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-400">⏳ กำลังโหลดข้อมูลจาก Google Sheets...</td></tr>';
+
+    try {
+        const response = await fetch(SCRIPT_URL); // เรียกใช้ doGet
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            // อัปเดตข้อมูลเข้าตัวแปร beneficiaries
+            beneficiaries = data.map(item => ({
+                first_name: item["ชื่อ"] || item.first_name,
+                last_name: item["นามสกุล"] || item.last_name,
+                organization_region: item["ศปง"] || item.organization_region,
+                project_type: item["โครงการ"] || item.project_type,
+                province: item["จังหวัด"] || item.province,
+                status: item["สถานะเศรษฐกิจ"] || item.status,
+                members: item["จำนวนสมาชิก"] || item.members,
+                income: item["รายได้"] || item.income
+            }));
+            
+            renderTable(beneficiaries);
+            updateDashboard();
+        } else {
+            document.getElementById('empty-state').classList.remove('hidden');
+            tableBody.innerHTML = '';
+        }
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showToast("❌ ไม่สามารถโหลดข้อมูลได้", "error");
+    }
+}
+
+// เรียกใช้งานฟังก์ชันโหลดข้อมูลเมื่อเปิดหน้าเว็บครั้งแรก
+window.onload = function() {
+    loadDataFromSheet();
+    navigate('dashboard');
+};
 
         function updateDashboard() {
             const total = beneficiaries.length;
