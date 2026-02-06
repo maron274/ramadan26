@@ -177,6 +177,16 @@
                 </div>
                 <div class="p-6 bg-slate-50 border-b flex flex-col md:flex-row gap-4 items-center">
                     <input type="text" id="search-input" oninput="applyFilters()" class="flex-1 input-style bg-white" placeholder="🔍 ค้นหาชื่อ, นามสกุล, จังหวัด...">
+                    
+                    <select id="filter-region" onchange="applyFilters()" class="w-full md:w-40 px-4 py-3 border border-gray-300 rounded-xl outline-none bg-white text-sm">
+                        <option value="">ทุก ศปง.</option>
+                        <option>ปัตตานี</option><option>ยะลา</option><option>นราธิวาส</option><option>พัทลุง</option>
+                    </select>
+                    <select id="filter-project" onchange="applyFilters()" class="w-full md:w-40 px-4 py-3 border border-gray-300 rounded-xl outline-none bg-white text-sm">
+                        <option value="">ทุกโครงการ</option>
+                        <option>ถุงยังชีพ</option><option>อิฟฏอร</option><option>เสื้อเด็กกำพร้า</option>
+                    </select>
+
                     <select id="filter-status" onchange="applyFilters()" class="w-full md:w-48 input-style bg-white text-sm">
                         <option value="">ทุกสถานะ</option>
                         <option>ยากจน</option><option>ปานกลาง</option><option>ดี</option>
@@ -342,14 +352,30 @@ window.onload = function() {
         }
 
         function applyFilters() {
-            const search = document.getElementById('search-input').value.toLowerCase();
-            const status = document.getElementById('filter-status').value;
-            const filtered = beneficiaries.filter(b => 
-                (b.first_name.toLowerCase().includes(search) || b.province.toLowerCase().includes(search)) &&
-                (status === "" || b.status === status)
-            );
-            renderTable(filtered);
-        }
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const region = document.getElementById('filter-region').value; // ดึงค่า ศปง.
+    const project = document.getElementById('filter-project').value; // ดึงค่าโครงการ
+    const status = document.getElementById('filter-status').value;
+
+    const filtered = beneficiaries.filter(b => {
+        // ค้นหาจากชื่อ-นามสกุล หรือ จังหวัด
+        const matchesSearch = (b.first_name + " " + b.last_name).toLowerCase().includes(search) || 
+                              (b.province || "").toLowerCase().includes(search);
+        
+        // กรองตาม ศปง.
+        const matchesRegion = region === "" || b.organization_region === region;
+        
+        // กรองตามโครงการ
+        const matchesProject = project === "" || b.project_type === project;
+        
+        // กรองตามสถานะ
+        const matchesStatus = status === "" || b.status === status;
+
+        return matchesSearch && matchesRegion && matchesProject && matchesStatus;
+    });
+
+    renderTable(filtered);
+}
 
         function showToast(msg) {
             const container = document.getElementById('toast-container');
