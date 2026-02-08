@@ -200,7 +200,11 @@
                         <tbody id="data-table" class="divide-y divide-gray-100 text-sm"></tbody>
                     </table>
                 </div>
-                
+                 <div class="p-6 bg-slate-50 border-t flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div id="badge-count" class="text-xs text-slate-400 font-bold">0 รายการ</div>
+                    <div id="pagination-controls" class="flex gap-2">
+                </div>
+                </div>
             </div>
         </section>
     </main>
@@ -209,7 +213,10 @@
         // --- 1. ใส่ URL ของ Web App จาก Google Apps Script ที่นี่ ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzY1cbIPsd9VRFsmP5o_Ycs0iA1N4ctZW-3plZmTPKne3TCXht2DMwQZCH7myzlKAj8xw/exec"; 
 
-        let beneficiaries = [];
+        let beneficiaries = []; // ข้อมูลทั้งหมดที่ดึงมาจาก Sheet
+        let filteredData = [];  // ข้อมูลที่ผ่านการกรอง (Search/Filter)
+        let currentPage = 1;    // หน้าปัจจุบัน
+        const rowsPerPage = 20; // จำนวนคนต่อหน้า
 
         function navigate(tab) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
@@ -277,7 +284,7 @@
         });
 
         // เพิ่มฟังก์ชันนี้ไว้ใน <script>
-async function loadDataFromSheet() {
+    async function loadDataFromSheet() {
     const tableBody = document.getElementById('data-table');
     tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-400">⏳ กำลังโหลดข้อมูลจาก Google Sheets...</td></tr>';
 
@@ -339,17 +346,33 @@ window.onload = function() {
             if (total > 0) document.getElementById('summary-latest').innerText = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
         }
 
-        function renderTable(data) {
+        function renderTable() {
             const tbody = document.getElementById('data-table');
-            tbody.innerHTML = data.map((b, i) => `
-                <tr class="hover:bg-blue-50/50 transition-all border-b">
-                    <td class="px-6 py-4 text-gray-400 font-medium">${i + 1}</td>
-                    <td class="px-6 py-4 font-bold text-slate-800">${b.first_name} ${b.last_name}</td>
-                    <td class="px-6 py-4 text-slate-600">${b.organization_region}</td>
-                    <td class="px-6 py-4 text-slate-600">${b.project_type}</td>
-                    <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold ${b.status==='ยากจน'?'bg-red-100 text-red-600':'bg-green-100 text-green-600'}">${b.status}</span></td>
-                </tr>`).join('');
-        }
+            document.getElementById('badge-count').innerText = "พบทั้งหมด " + filteredData.length + " รายการ";
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pagedData = filteredData.slice(startIndex, endIndex);
+
+    if (pagedData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-slate-400">ไม่พบข้อมูลที่ค้นหา</td></tr>';
+        renderPagination(0);
+        return;
+            }
+            tbody.innerHTML = pagedData.map((b, i) => `
+        <tr class="hover:bg-blue-50/50 transition-all border-b">
+            <td class="px-6 py-4 text-gray-400 font-medium">${startIndex + i + 1}</td>
+            <td class="px-6 py-4 font-bold text-slate-800">${b.first_name} ${b.last_name}</td>
+            <td class="px-6 py-4">${b.organization_region}</td>
+            <td class="px-6 py-4 font-bold text-blue-600">${b.project_type}</td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded-md text-[10px] font-bold ${b.status === 'ยากจน' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
+                    ${b.status}
+                </span>
+            </td>
+        </tr>`).join('');
+
+    renderPagination(filteredData.length);
+}
 
         function applyFilters() {
     const search = document.getElementById('search-input').value.toLowerCase();
@@ -357,25 +380,54 @@ window.onload = function() {
     const project = document.getElementById('filter-project').value; // ดึงค่าโครงการ
     const status = document.getElementById('filter-status').value;
 
-    const filtered = beneficiaries.filter(b => {
-        // ค้นหาจากชื่อ-นามสกุล หรือ จังหวัด
-        const matchesSearch = (b.first_name + " " + b.last_name).toLowerCase().includes(search) || 
-                              (b.province || "").toLowerCase().includes(search);
-        
-        // กรองตาม ศปง.
-        const matchesRegion = region === "" || b.organization_region === region;
-        
-        // กรองตามโครงการ
-        const matchesProject = project === "" || b.project_type === project;
-        
-        // กรองตามสถานะ
-        const matchesStatus = status === "" || b.status === status;
-
-        return matchesSearch && matchesRegion && matchesProject && matchesStatus;
+    filteredData = beneficiaries.filter(b => {
+        const fullName = (b.first_name + " " + b.last_name).toLowerCase();
+        return (fullName.includes(search) || (b.province || "").toLowerCase().includes(search)) &&
+               (region === "" || b.organization_region === region) &&
+               (project === "" || b.project_type === project) &&
+               (status === "" || b.status === status);
     });
 
-    renderTable(filtered);
+    currentPage = 1; // ทุกครั้งที่กรองใหม่ ให้กลับไปหน้า 1
+    renderTable();
 }
+function renderPagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / rowsPerPage);
+    const controls = document.getElementById('pagination-controls');
+    
+    if (totalPages <= 1) {
+        controls.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    // ปุ่มย้อนกลับ
+    html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1 border rounded-lg text-xs disabled:opacity-30">ก่อนหน้า</button>`;
+    
+    // สร้างเลขหน้า
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            html += `<button onclick="changePage(${i})" class="px-3 py-1 border rounded-lg text-xs ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-100'}">${i}</button>`;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            html += `<span class="px-1 text-gray-400 text-xs">...</span>`;
+        }
+    }
+
+    // ปุ่มถัดไป
+    html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1 border rounded-lg text-xs disabled:opacity-30">ถัดไป</button>`;
+    
+    controls.innerHTML = html;
+}
+
+// 4. ฟังก์ชันเปลี่ยนหน้า
+function changePage(page) {
+    currentPage = page;
+    renderTable();
+    // เลื่อนหน้าจอไปที่หัวตาราง
+    document.getElementById('section-list').scrollIntoView({ behavior: 'smooth' });
+}
+
+
 
         function showToast(msg) {
             const container = document.getElementById('toast-container');
