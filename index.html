@@ -124,6 +124,10 @@
                                 <option>ภูเก็ต</option><option>สตูล</option><option>พัทลุง</option><option>สงขลา</option><option>ปัตตานี</option><option>ยะลา</option><option>นราธิวาส</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2">เขต *</label>
+                            <input type="text" id="district" required class="input-style" placeholder="กรอกเขตพื้นที่">
+                        </div>
                         <div><label class="block text-sm font-bold mb-2">โครงการ *</label>
                             <select id="project_type" required class="input-style">
                                 <option value="">-- เลือกโครงการ --</option>
@@ -132,6 +136,7 @@
                         </div>
                         <div><label class="block text-sm font-bold mb-2">ชื่อ *</label><input type="text" id="first_name" required class="input-style"></div>
                         <div><label class="block text-sm font-bold mb-2">นามสกุล *</label><input type="text" id="last_name" required class="input-style"></div>
+                        <div><label class="block text-sm font-bold mb-2">เบอร์โทรศัพท์ *</label><input type="tel" id="phone" required class="input-style" placeholder="08x-xxxxxxx"></div>
                     </div>
 
                     <div class="bg-slate-50 p-6 rounded-2xl space-y-4">
@@ -172,9 +177,13 @@
         <section id="section-list" class="hidden">
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-blue-100">
                 <div class="bg-blue-600 px-6 py-5 text-white font-bold flex justify-between items-center">
-                    <span>📋 รายชื่อผู้ได้รับประโยชน์</span>
-                    <button onclick="exportToCSV()" class="bg-emerald-500 text-xs px-3 py-1 rounded-lg">📥 Export CSV</button>
-                </div>
+                  <div class="flex items-center gap-2">
+                <span class="text-xl">📋</span> รายชื่อผู้ได้รับประโยชน์
+            </div>
+            <button onclick="exportToCSV()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl shadow-md flex items-center gap-2 text-xs transition-all active:scale-95">
+                📥 Export CSV
+            </button>
+        </div>
                 <div class="p-6 bg-slate-50 border-b flex flex-col md:flex-row gap-4 items-center">
                     <input type="text" id="search-input" oninput="applyFilters()" class="flex-1 input-style bg-white" placeholder="🔍 ค้นหาชื่อ, นามสกุล, จังหวัด...">
                     
@@ -200,11 +209,13 @@
                         <tbody id="data-table" class="divide-y divide-gray-100 text-sm"></tbody>
                     </table>
                 </div>
-                 <div class="p-6 bg-slate-50 border-t flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div id="badge-count" class="text-xs text-slate-400 font-bold">0 รายการ</div>
-                    <div id="pagination-controls" class="flex gap-2">
+                
+                <div class="p-6 bg-slate-50 border-t flex flex-col md:flex-row justify-between items-center gap-4">
+            <div id="badge-count" class="text-xs text-slate-400 font-bold">0 รายการ</div>
+            <div id="pagination-controls" class="flex gap-2">
                 </div>
                 </div>
+
             </div>
         </section>
     </main>
@@ -239,7 +250,11 @@
             const formData = new URLSearchParams();
             formData.append('first_name', document.getElementById('first_name').value);
             formData.append('last_name', document.getElementById('last_name').value);
+            formData.append('phone', document.getElementById('phone').value); // ส่งเบอร์โทร
+            formData.append('district', document.getElementById('district').value);
+            formData.append('phone', document.getElementById('phone').value);
             formData.append('organization_region', document.getElementById('organization_region').value);
+            formData.append('district', document.getElementById('district').value); // ส่งเขต
             formData.append('project_type', document.getElementById('project_type').value);
             formData.append('house_no', document.getElementById('house_no').value);
             formData.append('moo', document.getElementById('moo').value);
@@ -263,7 +278,9 @@
                 beneficiaries.push({
                     first_name: document.getElementById('first_name').value,
                     last_name: document.getElementById('last_name').value,
+                    phone: document.getElementById('phone').value,
                     organization_region: document.getElementById('organization_region').value,
+                    district: document.getElementById('district').value,
                     project_type: document.getElementById('project_type').value,
                     province: document.getElementById('province').value,
                     status: status,
@@ -284,7 +301,7 @@
         });
 
         // เพิ่มฟังก์ชันนี้ไว้ใน <script>
-    async function loadDataFromSheet() {
+async function loadDataFromSheet() {
     const tableBody = document.getElementById('data-table');
     tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-400">⏳ กำลังโหลดข้อมูลจาก Google Sheets...</td></tr>';
 
@@ -357,13 +374,13 @@ window.onload = function() {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-slate-400">ไม่พบข้อมูลที่ค้นหา</td></tr>';
         renderPagination(0);
         return;
-            }
+    }
             tbody.innerHTML = pagedData.map((b, i) => `
         <tr class="hover:bg-blue-50/50 transition-all border-b">
             <td class="px-6 py-4 text-gray-400 font-medium">${startIndex + i + 1}</td>
             <td class="px-6 py-4 font-bold text-slate-800">${b.first_name} ${b.last_name}</td>
-            <td class="px-6 py-4">${b.organization_region}</td>
-            <td class="px-6 py-4 font-bold text-blue-600">${b.project_type}</td>
+            <span class="text-xs text-slate-400">📞 ${b.phone || '-'}</span>
+            <td class="px-6 py-4">${b.organization_region}<br><span class="text-xs text-blue-500">เขต: ${b.district || '-'}</span></td>            <td class="px-6 py-4 font-bold text-blue-600">${b.project_type}</td>
             <td class="px-6 py-4">
                 <span class="px-2 py-1 rounded-md text-[10px] font-bold ${b.status === 'ยากจน' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
                     ${b.status}
@@ -373,12 +390,12 @@ window.onload = function() {
 
     renderPagination(filteredData.length);
 }
-
+        
         function applyFilters() {
-    const search = document.getElementById('search-input').value.toLowerCase();
-    const region = document.getElementById('filter-region').value; // ดึงค่า ศปง.
-    const project = document.getElementById('filter-project').value; // ดึงค่าโครงการ
-    const status = document.getElementById('filter-status').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const region = document.getElementById('filter-region').value; // ดึงค่า ศปง.
+            const project = document.getElementById('filter-project').value; // ดึงค่าโครงการ
+            const status = document.getElementById('filter-status').value;
 
     filteredData = beneficiaries.filter(b => {
         const fullName = (b.first_name + " " + b.last_name).toLowerCase();
@@ -426,7 +443,6 @@ function changePage(page) {
     // เลื่อนหน้าจอไปที่หัวตาราง
     document.getElementById('section-list').scrollIntoView({ behavior: 'smooth' });
 }
-
 
 
         function showToast(msg) {
