@@ -126,7 +126,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-bold mb-2">เขต *</label>
-                            <input type="text" id="district" required class="input-style" placeholder="กรอกเขตพื้นที่">
+                            <input type="text" id="district" required class="input-style" placeholder="ระบุเขตพื้นที่">
                         </div>
                         <div><label class="block text-sm font-bold mb-2">โครงการ *</label>
                             <select id="project_type" required class="input-style">
@@ -222,7 +222,7 @@
 
     <script>
         // --- 1. ใส่ URL ของ Web App จาก Google Apps Script ที่นี่ ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzY1cbIPsd9VRFsmP5o_Ycs0iA1N4ctZW-3plZmTPKne3TCXht2DMwQZCH7myzlKAj8xw/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvnA22-pMrAI-5ua6Sdpnz4flG1hcBoaZ4OcMR4G6KFdzwNfau7mYq629pq0Pkb_VT5g/exec"; 
 
         let beneficiaries = []; // ข้อมูลทั้งหมดที่ดึงมาจาก Sheet
         let filteredData = [];  // ข้อมูลที่ผ่านการกรอง (Search/Filter)
@@ -362,30 +362,27 @@ window.onload = function() {
         }
 
         function renderTable() {
-            const tbody = document.getElementById('data-table');
-            document.getElementById('badge-count').innerText = "พบทั้งหมด " + filteredData.length + " รายการ";
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = startIndex + rowsPerPage;
-            const pagedData = filteredData.slice(startIndex, endIndex);
+    const tbody = document.getElementById('data-table');
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const pagedData = filteredData.slice(startIndex, endIndex);
 
-    if (pagedData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-slate-400">ไม่พบข้อมูลที่ค้นหา</td></tr>';
-        renderPagination(0);
-        return;
-    }
-            tbody.innerHTML = pagedData.map((b, i) => `
+    tbody.innerHTML = pagedData.map((b, i) => `
         <tr class="hover:bg-blue-50/50 transition-all border-b">
             <td class="px-6 py-4 text-gray-400 font-medium">${startIndex + i + 1}</td>
-            <td class="px-6 py-4 font-bold text-slate-800">${b.first_name} ${b.last_name}</td>
-            <span class="text-xs text-slate-400">📞 ${b.phone || '-'}</span>
-            <td class="px-6 py-4">${b.organization_region}<br><span class="text-xs text-blue-500">เขต: ${b.district || '-'}</span></td>            <td class="px-6 py-4 font-bold text-blue-600">${b.project_type}</td>
+            <td class="px-6 py-4 font-bold text-slate-800">
+                ${b.first_name} ${b.last_name}<br>
+                <span class="text-[10px] text-slate-400 font-normal">📞 ${b.phone || '-'}</span>
+            </td>
+            <td class="px-6 py-4 text-xs">${b.organization_region}<br><span class="text-blue-500">เขต: ${b.district || '-'}</span></td>
+            <td class="px-6 py-4 font-bold text-blue-600">${b.project_type}</td>
             <td class="px-6 py-4">
                 <span class="px-2 py-1 rounded-md text-[10px] font-bold ${b.status === 'ยากจน' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
                     ${b.status}
                 </span>
             </td>
         </tr>`).join('');
-
+    
     renderPagination(filteredData.length);
 }
         
