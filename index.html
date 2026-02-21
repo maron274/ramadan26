@@ -361,12 +361,24 @@ window.onload = function() {
             if (total > 0) document.getElementById('summary-latest').innerText = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
         }
 
-        function renderTable() {
+function renderTable() {
     const tbody = document.getElementById('data-table');
+    const badgeCount = document.getElementById('badge-count');
+    
+    // ถ้า filteredData ยังว่างให้ดึงจาก beneficiaries มาสำรองไว้ก่อน
+    if (filteredData.length === 0 && beneficiaries.length > 0) {
+        filteredData = beneficiaries;
+    }
+
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
     const pagedData = filteredData.slice(startIndex, endIndex);
 
+    if (pagedData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-10">ไม่พบข้อมูลในตาราง</td></tr>';
+        badgeCount.innerText = "0 รายการ";
+        return;
+    }
     tbody.innerHTML = pagedData.map((b, i) => `
         <tr class="hover:bg-blue-50/50 transition-all border-b">
             <td class="px-6 py-4 text-gray-400 font-medium">${startIndex + i + 1}</td>
@@ -383,6 +395,7 @@ window.onload = function() {
             </td>
         </tr>`).join('');
     
+    badgeCount.innerText = `${filteredData.length} รายการ`;
     renderPagination(filteredData.length);
 }
         
